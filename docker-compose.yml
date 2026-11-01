@@ -1,0 +1,78 @@
+name: eklesia
+
+services:
+  # PostgreSQL tidak pernah mempublikasikan port ke host di produksi.
+  # Untuk development, gunakan docker-compose.dev.yml yang mengikat 127.0.0.1.
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB wajib diisi di .env}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER wajib diisi di .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD wajib diisi di .env}
+      TZ: Asia/Jakarta
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  # One-shot: menjalankan migrasi sebelum aplikasi start.
+  migrate:
+    build:
+      context: .
+      target: runtime
+    command: ['node', 'dist/db/migrate.js']
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      TZ: Asia/Jakarta
+    read_only: true
+    tmpfs:
+      - /tmp
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runtime
+    environment:
+      NODE_ENV: production
+      APP_NAME: ${APP_NAME:-Eklesia}
+      PORT: 3000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WEB_DIST_PATH: /app/apps/web/dist
+      TZ: Asia/Jakarta
+    ports:
+      # Hanya localhost. Akses publik lewat Cloudflare Tunnel (fase deployment).
+      - '127.0.0.1:${APP_PORT:-3000}:3000'
+    read_only: true
+    tmpfs:
+      - /tmp
+    stop_grace_period: 15s
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  db-data:

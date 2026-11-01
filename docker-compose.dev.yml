@@ -1,0 +1,9 @@
+# Override KHUSUS DEVELOPMENT.
+# Memungkinkan `pnpm dev` di host terhubung ke PostgreSQL, tetapi port tetap
+# hanya diikat ke 127.0.0.1 (tidak terpublikasi ke jaringan/internet).
+#
+# Pemakaian: pnpm db:up
+services:
+  db:
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
