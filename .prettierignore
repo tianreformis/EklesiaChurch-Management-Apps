@@ -1,0 +1,12 @@
+# Dokumen panduan pemilik proyek — jangan diformat ulang otomatis.
+AGENTS.md
+DESCRIPTION.md
+PROMPT.md
+PROGRESS.md
+
+# Artefak build & data
+dist
+coverage
+node_modules
+pnpm-lock.yaml
+apps/api/drizzle
