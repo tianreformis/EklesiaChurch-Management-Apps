@@ -5,6 +5,7 @@ import { createDatabase } from './db/client.js';
 import { loadEnvFile } from './lib/load-env.js';
 import { loadEnvOrExit } from './lib/env.js';
 import { createLogger } from './lib/logger.js';
+import { createMailer } from './lib/mailer.js';
 
 loadEnvFile();
 const env = loadEnvOrExit();
@@ -15,11 +16,19 @@ const logger = createLogger({
   pretty: env.NODE_ENV === 'development',
 });
 
+// Runtime memakai peran terbatas (RLS aktif); lapisan sistem memakai pemilik
+// skema (migrasi/seed memakai URL yang sama dengan migrate).
 const { db, close } = createDatabase(env.DATABASE_URL);
+const system = createDatabase(env.MIGRATION_DATABASE_URL ?? env.DATABASE_URL);
+const mailer = createMailer(env, logger);
 
 const app = createApp({
   appName: env.APP_NAME,
   logger,
+  db: db,
+  systemDb: system.db,
+  env,
+  mailer,
   checkDatabase: async () => {
     await db.execute(sql`select 1`);
   },
@@ -33,7 +42,7 @@ const server = serve({ fetch: app.fetch, port: env.PORT, hostname: env.HOST }, (
 const shutdown = (signal: string): void => {
   logger.info({ signal }, 'menghentikan server');
   server.close(() => {
-    void close().finally(() => process.exit(0));
+    void Promise.all([close(), system.close()]).finally(() => process.exit(0));
   });
   // Jangan menggantung selamanya bila koneksi tidak menutup.
   setTimeout(() => process.exit(1), 10_000).unref();

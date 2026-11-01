@@ -27,7 +27,12 @@ services:
     command: ['node', 'dist/db/migrate.js']
     environment:
       NODE_ENV: production
+      APP_NAME: ${APP_NAME:-Eklesia}
+      APP_BASE_URL: ${APP_BASE_URL:-http://127.0.0.1:${APP_PORT:-3000}}
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      MIGRATION_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      APP_DB_USER: ${APP_DB_USER:-eklesia_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?APP_DB_PASSWORD wajib diisi di .env}
       TZ: Asia/Jakarta
     read_only: true
     tmpfs:
@@ -43,9 +48,12 @@ services:
     environment:
       NODE_ENV: production
       APP_NAME: ${APP_NAME:-Eklesia}
+      APP_BASE_URL: ${APP_BASE_URL:-http://127.0.0.1:${APP_PORT:-3000}}
       PORT: 3000
       HOST: 0.0.0.0
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      # Peran terbatas: RLS berlaku untuk koneksi ini.
+      DATABASE_URL: postgres://${APP_DB_USER:-eklesia_app}:${APP_DB_PASSWORD:?APP_DB_PASSWORD wajib diisi di .env}@db:5432/${POSTGRES_DB}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       WEB_DIST_PATH: /app/apps/web/dist
       TZ: Asia/Jakarta

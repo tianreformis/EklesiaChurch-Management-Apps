@@ -2,8 +2,11 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createApp } from './app.js';
+import { createApp, type AppDependencies } from './app.js';
+import type { Database } from './db/client.js';
+import type { AppConfig } from './lib/env.js';
 import { createLogger } from './lib/logger.js';
+import type { Mailer } from './lib/mailer.js';
 
 const logger = createLogger({
   level: 'silent',
@@ -11,8 +14,37 @@ const logger = createLogger({
   destination: { write() {} },
 });
 
-function buildApp(checkDatabase: () => Promise<void> = async () => undefined) {
-  return createApp({ appName: 'Eklesia', logger, checkDatabase });
+const env: AppConfig = {
+  APP_NAME: 'Eklesia',
+  APP_BASE_URL: 'http://localhost:5173',
+  SESSION_COOKIE_NAME: 'eklesia_session',
+  SESSION_TTL_DAYS: 7,
+  NODE_ENV: 'test',
+};
+
+const mailer: Mailer = {
+  isConfigured: false,
+  send: async () => undefined,
+};
+
+// Aplikasi tidak menyentuh database pada rute yang diuji di berkas ini.
+const db = {} as Database;
+
+function buildApp(
+  checkDatabase: () => Promise<void> = async () => undefined,
+  webDistPath?: string,
+) {
+  const deps: AppDependencies = {
+    appName: 'Eklesia',
+    logger,
+    db,
+    systemDb: db,
+    env,
+    mailer,
+    checkDatabase,
+    ...(webDistPath ? { webDistPath } : {}),
+  };
+  return createApp(deps);
 }
 
 describe('GET /api/health', () => {
@@ -44,6 +76,14 @@ describe('GET /api/health', () => {
     const app = buildApp();
     const response = await app.request('/api/health');
     expect(response.headers.get('X-Request-Id')).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('mengirim header keamanan dan CSP ketat', async () => {
+    const app = buildApp();
+    const response = await app.request('/api/health');
+    expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(response.headers.get('Content-Security-Policy')).toContain("default-src 'self'");
+    expect(response.headers.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
   });
 });
 
@@ -77,12 +117,7 @@ describe('penyajian SPA (mode produksi)', () => {
   });
 
   it('menyajikan aset statis dengan content-type yang benar', async () => {
-    const app = createApp({
-      appName: 'Eklesia',
-      logger,
-      checkDatabase: async () => undefined,
-      webDistPath: webDist,
-    });
+    const app = buildApp(undefined, webDist);
     const response = await app.request('/assets/app.js');
 
     expect(response.status).toBe(200);
@@ -91,12 +126,7 @@ describe('penyajian SPA (mode produksi)', () => {
   });
 
   it('mengembalikan index.html untuk rute SPA yang dalam', async () => {
-    const app = createApp({
-      appName: 'Eklesia',
-      logger,
-      checkDatabase: async () => undefined,
-      webDistPath: webDist,
-    });
+    const app = buildApp(undefined, webDist);
     const response = await app.request('/jemaat/123');
 
     expect(response.status).toBe(200);
@@ -104,12 +134,7 @@ describe('penyajian SPA (mode produksi)', () => {
   });
 
   it('tidak menimpa rute /api yang tidak ada dengan index.html', async () => {
-    const app = createApp({
-      appName: 'Eklesia',
-      logger,
-      checkDatabase: async () => undefined,
-      webDistPath: webDist,
-    });
+    const app = buildApp(undefined, webDist);
     const response = await app.request('/api/tidak-ada');
 
     expect(response.status).toBe(404);
@@ -117,12 +142,7 @@ describe('penyajian SPA (mode produksi)', () => {
   });
 
   it('tetap mengembalikan 404 bila folder build tidak ada', async () => {
-    const app = createApp({
-      appName: 'Eklesia',
-      logger,
-      checkDatabase: async () => undefined,
-      webDistPath: join(webDist, 'tidak-ada'),
-    });
+    const app = buildApp(undefined, join(webDist, 'tidak-ada'));
     const response = await app.request('/jemaat');
     expect(response.status).toBe(404);
   });

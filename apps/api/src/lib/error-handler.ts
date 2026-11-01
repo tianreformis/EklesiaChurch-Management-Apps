@@ -1,11 +1,13 @@
 import { HTTPException } from 'hono/http-exception';
 import type { ErrorHandler, NotFoundHandler } from 'hono';
 import type { Logger } from 'pino';
+import { AppError } from './errors.js';
 
 export interface ApiErrorBody {
   error: {
     code: string;
     message: string;
+    fields?: Record<string, string>;
   };
 }
 
@@ -15,6 +17,17 @@ export interface ApiErrorBody {
  */
 export function createErrorHandler(logger: Logger): ErrorHandler {
   return (error, c) => {
+    if (error instanceof AppError) {
+      logger.warn(
+        { status: error.status, method: c.req.method, path: c.req.path, code: error.code },
+        'permintaan ditolak',
+      );
+      const body: ApiErrorBody = {
+        error: { code: error.code, message: error.message },
+      };
+      return c.json(body, error.status);
+    }
+
     if (error instanceof HTTPException) {
       const status = error.status;
       logger.warn(

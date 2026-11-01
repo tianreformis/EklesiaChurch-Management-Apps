@@ -1,13 +1,27 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1793527366421,
-      "tag": "0000_special_aqueduct",
-      "breakpoints": true
-    }
-  ]
+    "version":  "7",
+    "dialect":  "postgresql",
+    "entries":  [
+                    {
+                        "idx":  0,
+                        "version":  "7",
+                        "when":  1793527366421,
+                        "tag":  "0000_special_aqueduct",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  1,
+                        "version":  "7",
+                        "when":  1793528869601,
+                        "tag":  "0001_superb_deadpool",
+                        "breakpoints":  true
+                    },
+                    {
+                        "idx":  2,
+                        "breakpoints":  true,
+                        "when":  1793564962000,
+                        "version":  "7",
+                        "tag":  "0002_tenant_rls"
+                    }
+                ]
 }

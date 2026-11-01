@@ -9,3 +9,15 @@ export {
   toDateInputValue,
   type DateInput,
 } from './format/date.js';
+export * from './schemas/index.js';
+export {
+  PERMISSIONS,
+  ROLE_LABELS,
+  ROLES,
+  canAny,
+  canManageRole,
+  hasPermission,
+  permissionsFor,
+  type Permission,
+  type Role,
+} from './permissions.js';
