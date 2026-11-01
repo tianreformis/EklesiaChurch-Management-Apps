@@ -1,4 +1,3 @@
-import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { resetRateLimits } from '../middleware/rate-limit.js';
 import { migrateTestDatabase } from './setup.js';

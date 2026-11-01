@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Church, CircleCheck, CircleSlash, RefreshCw, Users } from 'lucide-react';
 import { formatDateShort } from '@eklesia/shared';
 import { ErrorAlert } from '@/components/feedback/error-alert';

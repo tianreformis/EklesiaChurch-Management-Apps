@@ -8,6 +8,7 @@ import { createErrorHandler, notFoundHandler } from './lib/error-handler.js';
 import type { Mailer } from './lib/mailer.js';
 import { registerSpa } from './lib/spa.js';
 import { createAuthMiddleware } from './middleware/auth.js';
+import { sameOrigin } from './middleware/same-origin.js';
 import { createRequestLogger } from './middleware/request-logger.js';
 import { createAuditRoutes } from './routes/audit.js';
 import { createAuthRoutes } from './routes/auth.js';
@@ -101,8 +102,9 @@ export function createApp(deps: AppDependencies) {
         crossOriginEmbedderPolicy: false,
       }),
     )
-    // Semua permintaan yang mengubah data wajib berasal dari origin sendiri.
-    .use('/api/*', csrf())
+    // fetch API dari browser selalu satu origin di produksi; dev server Vite
+    // masuk daftar tepercaya karena memakai proxy /api.
+    .use('/api/*', csrf(), sameOrigin({ trustedOrigins: ['http://127.0.0.1:5173'] }))
     .onError(createErrorHandler(deps.logger))
     .notFound(notFoundHandler)
     .route('/api', api);

@@ -1,10 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import type { AuditLogItem } from '@eklesia/api';
 import { apiClient } from '@/lib/api';
 import { toApiError } from '@/lib/http';
 
 export interface AuditPage {
-  items: AuditLogItem[];
+  items: {
+    id: string;
+    entity: string;
+    entityId: string | null;
+    action: string;
+    userId: string | null;
+    before: unknown;
+    after: unknown;
+    createdAt: string;
+  }[];
   meta: { page: number; perPage: number; total: number; totalPages: number };
 }
 
