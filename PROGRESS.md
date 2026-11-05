@@ -4,7 +4,7 @@
 > Format log: `YYYY-MM-DD — ringkasan singkat`.
 
 **Stack:** Vite + React (SPA) · Hono · PostgreSQL + Drizzle · Docker (pnpm monorepo: `apps/web`, `apps/api`, `packages/shared`)
-**Fase aktif:** Fase 1 selesai — menunggu instruksi untuk Fase 2
+**Fase aktif:** Fase 2 selesai — menunggu instruksi untuk Fase 3
 **Terakhir diperbarui:** 2026-11-05
 
 ---
@@ -64,15 +64,24 @@
 
 ## Fase 2 — Data jemaat
 
-- [ ] Skema: `members`, `families`, `regions`, `groups`, `group_members`
-- [ ] API + UI CRUD anggota, daftar dengan pencarian dan filter, paginasi
-- [ ] CRUD keluarga, wilayah, komisi/tim; atur anggota di komisi
-- [ ] Impor Excel: template, unggah, pratinjau, validasi per baris, deteksi duplikat, laporan error
-- [ ] Ekspor Excel
-- [ ] Halaman detail anggota
-- [ ] Test: validasi impor (baris rusak, duplikat, batas ukuran), izin per peran, isolasi tenant
+- [x] Skema: `members`, `families`, `regions`, `groups`, `group_members`
+- [x] API + UI CRUD anggota, daftar dengan pencarian dan filter, paginasi
+- [x] CRUD keluarga, wilayah, komisi/tim; atur anggota di komisi
+- [x] Impor Excel: template, unggah, pratinjau, validasi per baris, deteksi duplikat, laporan error
+- [x] Ekspor Excel
+- [x] Halaman detail anggota
+- [x] Test: validasi impor (baris rusak, duplikat, batas ukuran), izin per peran, isolasi tenant
 
 **Lulus jika:** impor 500 baris contoh berhasil dengan laporan error yang benar.
+
+**Bukti pemenuhan (2026-11-05):**
+
+- `typecheck` bersih di 3 paket; `lint` 0 error (11 warning non-kritis yang sama seperti Fase 1); `test` hijau — API 36 test (termasuk 6 test jemaat: CRUD, filter, relasi keluarga/wilayah/komisi, isolasi tenant per rute, izin majelis baca-saja, impor/ekspor), shared 29 test (termasuk 8 test skema jemaat).
+- `pnpm build` hijau; halaman jemaat ter-code-split (`members-page` ±31 KB, gzip ±8 KB).
+- Docker rebuild + `up -d`: `migrate` exit 0, `app` healthy, `/api/health` → `ok`. Smoke API produksi: login admin demo → buat/cari/detail/hapus anggota, unduh template dan ekspor Excel (200).
+- Uji kriteria kelulusan: impor 500 baris + 1 baris rusak lewat API produksi → 500 dibuat, 1 dilewati dengan laporan "Baris 502: fullName: Nama minimal 2 karakter." Data uji dibersihkan setelahnya.
+- UI diperiksa di browser (Chrome headless via REA Playwright): login → `/jemaat` desktop 1280px dan mobile 390px, tab Komisi & Tim dapat dibuka, tombol Tambah/Impor/Ekspor tampil untuk admin, tanpa error konsol/halaman.
+- Perbaikan yang ditemukan test baru: regex `optionalDate` menolak string kosong (sekarang pola mengizinkan kosong lalu diubah ke `undefined`); `updateMemberSchema` lolos untuk objek kosong karena default status (sekarang status di-omit lalu di-extend optional sebelum refine); migrasi test dikunci advisory lock dan file integrasi dijalankan serial (`fileParallelism: false`) karena berbagi satu DB uji.
 
 ## Fase 3 — Jadwal pelayanan
 
@@ -153,5 +162,6 @@
 
 _(Terbaru di atas.)_
 
+- 2026-11-05 — **Fase 2 selesai.** Skema `members/families/regions/groups/group_members` + RLS, API dan UI CRUD jemaat (daftar berfilter + paginasi, detail, ulang tahun bulan ini), CRUD keluarga/wilayah/komisi + atur anggota komisi, impor Excel (template, pratinjau, deteksi duplikat lewati/perbarui, laporan error per baris) dan ekspor Excel. Test hijau (API 36, shared 29), typecheck/lint/build hijau, Docker sehat, impor 500 baris terbukti, UI desktop+mobile tanpa error konsol.
 - 2026-11-05 — **Fase 1 selesai.** Auth sesi DB + argon2 + cookie httpOnly, middleware auth/tenant/permission/CSRF+same-origin/rate-limit, RLS lapis kedua, matriks `permissions.ts`, UI login/lupa-password/undangan/pengguna/pengaturan/platform/audit-log + header keamanan. Test hijau (API 30, shared 21), typecheck/lint/build hijau, Docker dari volume kosong sehat, UI desktop+mobile tanpa error konsol.
 - 2026-11-01 — **Fase 0 selesai.** Monorepo pnpm (web/api/shared), TypeScript strict, ESLint flat + Prettier, Vitest (15 test shared, 16 test API). API Hono dengan `/api/health` ber-injeksi, error handler terpusat, logger pino ber-redaksi, penyajian SPA + fallback dengan penjagaan `/api`. Web React Router + TanStack Query + Hono RPC bertipe, layout responsif (16px, kontras tinggi), status sistem di dasbor. Drizzle + PostgreSQL 16: migrasi `churches`/`super_admins`, `db:migrate`, `db:seed` (2 gereja fiktif). Docker multi-stage non-root, read-only, `db`/`migrate`/`app` dengan healthcheck; uji dari volume kosong berhasil. README + `.env.example` + `.gitattributes` (eol=lf) + `.prettierignore`.

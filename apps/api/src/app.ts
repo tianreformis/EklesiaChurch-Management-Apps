@@ -14,6 +14,8 @@ import { createAuditRoutes } from './routes/audit.js';
 import { createAuthRoutes } from './routes/auth.js';
 import { createChurchRoutes } from './routes/church.js';
 import { createHealthRoutes, type DatabaseCheck } from './routes/health.js';
+import { createMemberImportRoutes } from './routes/members-import.js';
+import { createMemberRoutes } from './routes/members.js';
 import { createPlatformRoutes } from './routes/platform.js';
 import { createUserRoutes } from './routes/users.js';
 import type { AppEnv } from './types.js';
@@ -73,6 +75,8 @@ export function createApp(deps: AppDependencies) {
       }),
     )
     .route('/users', createUserRoutes(deps))
+    .route('/members', createMemberRoutes(deps))
+    .route('/members-import', createMemberImportRoutes(deps))
     .route('/church', createChurchRoutes(deps))
     .route('/audit', createAuditRoutes(deps))
     .route('/platform', createPlatformRoutes({ ...deps, db: deps.systemDb }));

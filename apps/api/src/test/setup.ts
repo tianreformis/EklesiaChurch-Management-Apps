@@ -8,17 +8,26 @@ const TEST_DATABASE_URL =
 
 const migrationsFolder = fileURLToPath(new URL('../../drizzle', import.meta.url));
 
-/** Menjalankan migrasi ke database uji sekali sebelum semua test integrasi. */
+/**
+ * Menjalankan migrasi ke database uji sebelum test integrasi. File test
+ * berjalan paralel, jadi migrasi dikunci dengan advisory lock agar tidak
+ * saling menabrak ("tuple concurrently updated").
+ */
 export async function migrateTestDatabase(): Promise<void> {
   const client = postgres(TEST_DATABASE_URL, { max: 1, onnotice: () => {} });
   try {
-    await migrate(drizzle(client), { migrationsFolder });
-    // Peran aplikasi perlu hak atas tabel baru di database uji.
-    await client.unsafe(`GRANT USAGE ON SCHEMA public TO eklesia_app`);
-    await client.unsafe(
-      `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO eklesia_app`,
-    );
-    await client.unsafe(`GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO eklesia_app`);
+    await client.unsafe(`SELECT pg_advisory_lock(20261105)`);
+    try {
+      await migrate(drizzle(client), { migrationsFolder });
+      // Peran aplikasi perlu hak atas tabel baru di database uji.
+      await client.unsafe(`GRANT USAGE ON SCHEMA public TO eklesia_app`);
+      await client.unsafe(
+        `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO eklesia_app`,
+      );
+      await client.unsafe(`GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO eklesia_app`);
+    } finally {
+      await client.unsafe(`SELECT pg_advisory_unlock(20261105)`);
+    }
   } finally {
     await client.end({ timeout: 5 });
   }

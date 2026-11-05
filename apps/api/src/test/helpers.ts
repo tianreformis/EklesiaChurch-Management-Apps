@@ -127,9 +127,11 @@ export async function createTestUser(
   };
 }
 
-/** Membersihkan data uji antar test; hanya tabel auth Fase 1. */
+/** Membersihkan data uji antar test; hanya tabel Fase 1–2. */
 export async function clearAuthTables(ownerDb: Database): Promise<void> {
-  await ownerDb.execute(sql`truncate table sessions, auth_tokens, users, churches cascade`);
+  await ownerDb.execute(
+    sql`truncate table sessions, auth_tokens, users, group_members, members, families, regions, groups, audit_logs, churches cascade`,
+  );
 }
 
 export const CSRF_HEADERS = {

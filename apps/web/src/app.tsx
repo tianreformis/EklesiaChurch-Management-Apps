@@ -11,6 +11,8 @@ const ForgotPasswordPage = lazy(() => import('@/routes/forgot-password-page'));
 const ResetPasswordPage = lazy(() => import('@/routes/reset-password-page'));
 const AcceptInvitationPage = lazy(() => import('@/routes/accept-invitation-page'));
 const DashboardPage = lazy(() => import('@/routes/dashboard-page'));
+const MembersPage = lazy(() => import('@/routes/members-page'));
+const MemberDetailPage = lazy(() => import('@/routes/member-detail-page'));
 const UsersPage = lazy(() => import('@/routes/users-page'));
 const ChurchSettingsPage = lazy(() => import('@/routes/church-settings-page'));
 const AuditPage = lazy(() => import('@/routes/audit-page'));
@@ -47,7 +49,15 @@ export function App() {
               path="/jemaat"
               element={
                 <ChurchUserOnly>
-                  <ModulePlaceholderPage />
+                  <MembersPage />
+                </ChurchUserOnly>
+              }
+            />
+            <Route
+              path="/jemaat/:id"
+              element={
+                <ChurchUserOnly>
+                  <MemberDetailPage />
                 </ChurchUserOnly>
               }
             />
