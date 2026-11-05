@@ -16,3 +16,5 @@ data/
 test-attachments/
 
 .playwright-mcp/
+test-results/
+playwright-report/

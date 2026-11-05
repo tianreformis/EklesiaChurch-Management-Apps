@@ -59,6 +59,14 @@ const timeString = z
   .trim()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Gunakan format jam HH:MM.');
 
+/** Jam opsional: string kosong dari form diubah menjadi undefined. */
+const optionalTime = z
+  .string()
+  .trim()
+  .regex(/^(([01]\d|2[0-3]):[0-5]\d)?$/, 'Gunakan format jam HH:MM.')
+  .optional()
+  .transform((value) => (value === '' ? undefined : value));
+
 export const createServiceRoleSchema = z.object({
   name: nameSchema,
   groupId: z.string().uuid('Komisi/tim tidak dikenal.').nullish(),
@@ -81,7 +89,7 @@ export const createServiceSchema = z.object({
   title: nameSchema,
   date: dateString,
   startTime: timeString,
-  endTime: timeString.optional(),
+  endTime: optionalTime,
   location: optionalText(200, 'Lokasi'),
   theme: optionalText(300, 'Tema'),
   preacher: optionalText(120, 'Pengkhotbah'),

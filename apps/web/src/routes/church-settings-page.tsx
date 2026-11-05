@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useChurch, useUpdateChurch } from '@/features/church/api';
+import { downloadApiFile } from '@/features/members/api';
 import { errorMessage, isApiError } from '@/lib/http';
 
 type ChurchForm = z.input<typeof updateChurchSchema>;
@@ -155,6 +157,26 @@ export default function ChurchSettingsPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cadangan data gereja</CardTitle>
+          <CardDescription>
+            Unduh seluruh data gereja (anggota, keluarga, wilayah, komisi, jadwal, dan keuangan)
+            sebagai berkas Excel. Berkas memuat data pribadi — simpan di tempat aman. Hanya admin
+            gereja yang dapat mengunduh dan unduhan tercatat di jejak audit.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => void downloadApiFile('/api/church/export.xlsx', 'ekspor-data-gereja.xlsx')}
+          >
+            <Download aria-hidden /> Unduh ekspor data (Excel)
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

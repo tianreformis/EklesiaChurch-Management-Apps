@@ -135,19 +135,20 @@ export function OfferingSection({ canWrite, monthKey }: { canWrite: boolean; mon
             </Select>
           </div>
           <div className="flex flex-col gap-2">
-            <Label className="text-base font-semibold">Dihitung oleh</Label>
-            <Input className="min-h-11 text-base" value={countedBy} onChange={(e) => setCountedBy(e.target.value)} disabled={!canWrite} />
+            <Label htmlFor="offering-counted" className="text-base font-semibold">Dihitung oleh</Label>
+            <Input id="offering-counted" className="min-h-11 text-base" value={countedBy} onChange={(e) => setCountedBy(e.target.value)} disabled={!canWrite} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label className="text-base font-semibold">Diverifikasi oleh</Label>
-            <Input className="min-h-11 text-base" value={verifiedBy} onChange={(e) => setVerifiedBy(e.target.value)} disabled={!canWrite} />
+            <Label htmlFor="offering-verified" className="text-base font-semibold">Diverifikasi oleh</Label>
+            <Input id="offering-verified" className="min-h-11 text-base" value={verifiedBy} onChange={(e) => setVerifiedBy(e.target.value)} disabled={!canWrite} />
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {incomeCategories.map((category) => (
             <div key={category.id} className="flex flex-col gap-2">
-              <Label className="text-base font-semibold">{category.name} (Rp)</Label>
+              <Label htmlFor={`offering-${category.id}`} className="text-base font-semibold">{category.name} (Rp)</Label>
               <Input
+                id={`offering-${category.id}`}
                 className="min-h-11 text-base"
                 inputMode="numeric"
                 placeholder="0"

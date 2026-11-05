@@ -1,10 +1,21 @@
 name: eklesia
 
+# Rotasi log Docker untuk semua layanan agar disk tidak penuh oleh log.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
 services:
   # PostgreSQL tidak pernah mempublikasikan port ke host di produksi.
   # Untuk development, gunakan docker-compose.dev.yml yang mengikat 127.0.0.1.
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 512m
+    cpus: 1.0
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB wajib diisi di .env}
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER wajib diisi di .env}
@@ -24,6 +35,7 @@ services:
     build:
       context: .
       target: runtime
+    logging: *default-logging
     command: ['node', 'dist/db/migrate.js']
     environment:
       NODE_ENV: production
@@ -45,6 +57,10 @@ services:
     build:
       context: .
       target: runtime
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 512m
+    cpus: 1.0
     environment:
       NODE_ENV: production
       APP_NAME: ${APP_NAME:-Eklesia}
@@ -89,6 +105,63 @@ services:
       retries: 5
       start_period: 20s
 
+  # Cadangan database harian (profile `backup`): pg_dump ke volume, unggah
+  # opsional ke cloud lewat rclone, retensi lokal. Lihat docs/backup-restore.md.
+  backup:
+    build:
+      context: ./docker/backup
+    profiles: ['backup']
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 256m
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:?POSTGRES_USER wajib diisi di .env}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD wajib diisi di .env}
+      PGDATABASE: ${POSTGRES_DB:?POSTGRES_DB wajib diisi di .env}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+      # Contoh: remote:gdrive-eklesia (konfigurasi rclone dipasang sebagai
+      # volume hanya-baca dari host, lihat docs/backup-restore.md).
+      BACKUP_RCLONE_REMOTE: ${BACKUP_RCLONE_REMOTE:-}
+      TZ: Asia/Jakarta
+    volumes:
+      - backups-data:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Akses publik lewat Cloudflare Tunnel (profile `tunnel`), tanpa membuka
+  # port router. Lihat docs/cloudflare-tunnel.md.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ['tunnel']
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 128m
+    command: tunnel --no-autoupdate run
+    environment:
+      # Wajib diisi di .env bila profile `tunnel` dipakai (lihat docs).
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      app:
+        condition: service_healthy
+
+  # Pemantauan uptime opsional (profile `monitor`): http://127.0.0.1:3001
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    profiles: ['monitor']
+    restart: unless-stopped
+    logging: *default-logging
+    mem_limit: 256m
+    ports:
+      - '127.0.0.1:3001:3001'
+    volumes:
+      - uptime-data:/app/data
+
 volumes:
   db-data:
   attachments-data:
+  backups-data:
+  uptime-data:

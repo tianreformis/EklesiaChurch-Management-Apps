@@ -73,7 +73,8 @@ Fokus MVP: **data jemaat, jadwal pelayanan, dan keuangan (kas + persembahan)**.
 | `pnpm format`      | Prettier                                           |
 | `pnpm db:generate` | Membuat migrasi baru dari skema Drizzle            |
 | `pnpm db:migrate`  | Menjalankan migrasi                                |
-| `pnpm db:seed`     | Seed gereja demo fiktif                            |
+| `pnpm db:seed`     | Seed gereja demo fiktif (±60 anggota/gereja)       |
+| `pnpm test:e2e`    | Playwright alur kritis (butuh Docker + seed jalan) |
 
 ## Menjalankan untuk produksi (komputer gereja)
 
@@ -87,6 +88,15 @@ docker compose up -d --build
 - Migrasi berjalan otomatis lewat layanan `migrate` sebelum `app` start.
 - Cek kesehatan: `docker compose ps` dan <http://127.0.0.1:3000/api/health>.
 - PostgreSQL **tidak** mempublikasikan port ke host.
+
+## Dokumentasi lanjutan
+
+- `docs/backup-restore.md` — cadangan harian (profile `backup`), rclone, uji restore.
+- `docs/cloudflare-tunnel.md` — akses publik aman (profile `tunnel`).
+- `docs/panduan-server.md` — menyiapkan komputer server gereja (Windows).
+- Panduan admin gereja tersedia di dalam aplikasi: menu **Bantuan**.
+- Pemantauan uptime opsional: `docker compose --profile monitor up -d` lalu
+  buka <http://127.0.0.1:3001>.
 
 ## Struktur proyek
 

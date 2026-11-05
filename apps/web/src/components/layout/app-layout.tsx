@@ -42,6 +42,7 @@ const navigation: NavigationItem[] = [
   { to: '/pengguna', label: 'Pengguna', icon: UserCog, permission: 'users.manage' },
   { to: '/jejak-audit', label: 'Jejak audit', icon: ClipboardList, permission: 'finance.audit' },
   { to: '/pengaturan', label: 'Pengaturan', icon: Settings, permission: 'church.manage' },
+  { to: '/bantuan', label: 'Bantuan', icon: ClipboardList, churchOnly: true },
   { to: '/platform', label: 'Platform', icon: ShieldCheck, platformOnly: true },
 ];
 
@@ -165,6 +166,11 @@ export function AppLayout() {
           <p>
             {APP_NAME} — aplikasi manajemen gereja. Data jemaat bersifat rahasia; jangan dibagikan
             tanpa izin.
+          </p>
+          <p className="mt-2 flex flex-wrap gap-4">
+            <NavLink to="/bantuan" className="underline underline-offset-2">Panduan</NavLink>
+            <NavLink to="/kebijakan-privasi" className="underline underline-offset-2">Kebijakan privasi</NavLink>
+            <NavLink to="/syarat-penggunaan" className="underline underline-offset-2">Syarat penggunaan</NavLink>
           </p>
         </div>
       </footer>

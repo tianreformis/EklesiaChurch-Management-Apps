@@ -15,6 +15,9 @@ const MembersPage = lazy(() => import('@/routes/members-page'));
 const MemberDetailPage = lazy(() => import('@/routes/member-detail-page'));
 const SchedulePage = lazy(() => import('@/routes/schedule-page'));
 const FinancePage = lazy(() => import('@/routes/finance-page'));
+const HelpPage = lazy(() => import('@/routes/help-page'));
+const PrivacyPage = lazy(() => import('@/routes/privacy-page'));
+const TermsPage = lazy(() => import('@/routes/terms-page'));
 const UsersPage = lazy(() => import('@/routes/users-page'));
 const ChurchSettingsPage = lazy(() => import('@/routes/church-settings-page'));
 const AuditPage = lazy(() => import('@/routes/audit-page'));
@@ -34,6 +37,8 @@ export function App() {
         <Route path="/lupa-password" element={<ForgotPasswordPage />} />
         <Route path="/atur-ulang-password" element={<ResetPasswordPage />} />
         <Route path="/undangan" element={<AcceptInvitationPage />} />
+        <Route path="/kebijakan-privasi" element={<PrivacyPage />} />
+        <Route path="/syarat-penggunaan" element={<TermsPage />} />
 
         <Route element={<RequireSession />}>
           <Route element={<AppLayout />}>
@@ -99,6 +104,14 @@ export function App() {
               element={
                 <ChurchUserOnly>
                   <ChurchSettingsPage />
+                </ChurchUserOnly>
+              }
+            />
+            <Route
+              path="/bantuan"
+              element={
+                <ChurchUserOnly>
+                  <HelpPage />
                 </ChurchUserOnly>
               }
             />

@@ -19,14 +19,17 @@
     "db:down": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
     "db:generate": "pnpm --filter @eklesia/api db:generate",
     "db:migrate": "pnpm --filter @eklesia/api db:migrate",
-    "db:seed": "pnpm --filter @eklesia/api db:seed"
+    "db:seed": "pnpm --filter @eklesia/api db:seed",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.6",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
+    "exceljs": "^4.4.0",
     "globals": "^17.13.0",
     "prettier": "^3.9.10",
     "typescript": "6.0.3",

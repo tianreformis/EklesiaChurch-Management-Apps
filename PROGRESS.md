@@ -4,7 +4,7 @@
 > Format log: `YYYY-MM-DD — ringkasan singkat`.
 
 **Stack:** Vite + React (SPA) · Hono · PostgreSQL + Drizzle · Docker (pnpm monorepo: `apps/web`, `apps/api`, `packages/shared`)
-**Fase aktif:** Fase 4 selesai — menunggu instruksi untuk Fase 5
+**Fase aktif:** Fase 5 selesai — MVP (Tahap 1) tuntas
 **Terakhir diperbarui:** 2026-11-05
 
 ---
@@ -129,21 +129,33 @@
 
 ## Fase 5 — Dashboard, hardening, dan deploy produksi di komputer pribadi
 
-- [ ] Dashboard per peran
-- [ ] Fitur backup: ekspor seluruh data gereja (zip/Excel) untuk admin gereja
-- [ ] Layanan `backup` di Compose: `pg_dump` harian, unggah ke cloud via rclone, retensi, skrip dan dokumentasi **restore** yang sudah diuji
-- [ ] Layanan `cloudflared` (profile `tunnel`) + panduan setup Cloudflare Tunnel dan domain
-- [ ] Restart policy `unless-stopped`, log rotation Docker, batas memori/CPU kontainer
-- [ ] Panduan komputer server: matikan sleep/hibernate, auto-start Docker saat boot, auto-restart setelah mati listrik, jam aktif update Windows (bila Windows), firewall
-- [ ] Uptime Kuma (opsional) untuk pemantauan
-- [ ] Audit UI untuk pengguna lanjut usia dan mobile; audit ukuran bundle (code splitting per rute)
-- [ ] Test E2E (Playwright) alur kritis: login → impor jemaat → buat jadwal → catat persembahan → cetak laporan
-- [ ] Halaman kebijakan privasi dan syarat penggunaan (draf)
-- [ ] Review keamanan (checklist `AGENTS.md`), pastikan tidak ada data pribadi di log, port DB tidak terekspos
-- [ ] Seed data demo lengkap
-- [ ] Panduan singkat untuk admin gereja (halaman bantuan/PDF)
+- [x] Dashboard per peran
+- [x] Fitur backup: ekspor seluruh data gereja (zip/Excel) untuk admin gereja
+- [x] Layanan `backup` di Compose: `pg_dump` harian, unggah ke cloud via rclone, retensi, skrip dan dokumentasi **restore** yang sudah diuji
+- [x] Layanan `cloudflared` (profile `tunnel`) + panduan setup Cloudflare Tunnel dan domain
+- [x] Restart policy `unless-stopped`, log rotation Docker, batas memori/CPU kontainer
+- [x] Panduan komputer server: matikan sleep/hibernate, auto-start Docker saat boot, auto-restart setelah mati listrik, jam aktif update Windows (bila Windows), firewall
+- [x] Uptime Kuma (opsional) untuk pemantauan
+- [x] Audit UI untuk pengguna lanjut usia dan mobile; audit ukuran bundle (code splitting per rute)
+- [x] Test E2E (Playwright) alur kritis: login → impor jemaat → buat jadwal → catat persembahan → cetak laporan
+- [x] Halaman kebijakan privasi dan syarat penggunaan (draf)
+- [x] Review keamanan (checklist `AGENTS.md`), pastikan tidak ada data pribadi di log, port DB tidak terekspos
+- [x] Seed data demo lengkap
+- [x] Panduan singkat untuk admin gereja (halaman bantuan/PDF)
 
 **Lulus jika:** gereja pilot bisa memakai seluruh alur MVP lewat domain publik, backup dan restore terbukti berjalan, tanpa bantuan developer.
+
+**Bukti pemenuhan (2026-11-05):**
+
+- `typecheck` bersih di 3 paket; `lint` 0 error (11 warning non-kritis); `test` hijau — API 52 test (termasuk ekspor data gereja: admin 200 berisi 12 lembar dan hanya data gereja sendiri, bendahara 403), shared 40 test; `build` hijau.
+- E2E Playwright (`pnpm test:e2e`, Chrome lokal): login → impor 3 jemaat → buat ibadah + penugasan → catat persembahan → unduh PDF laporan — **lulus**, termasuk dari volume Docker kosong. E2E menemukan dan memicu perbaikan bug asli: jam selesai kosong pada form ibadah ditolak skema (sekarang `optionalTime` mengizinkan kosong).
+- Backup terbukti: layanan `backup` (profile) membuat dump; restore ke database sementara berhasil dan terverifikasi (120 anggota, 26 transaksi, 2 gereja), lalu database uji dihapus. Panduan `docs/backup-restore.md`.
+- Keamanan: `docker compose config` produksi hanya menerbitkan `127.0.0.1:3000`; port DB tidak ada (`docker compose port db 5432` kosong); log pino teredaksi (Fase 1); ekspor data tercatat audit dan berizin `church.backup`.
+- Docker dari volume kosong: `down -v` → `up -d --build` → migrate exit 0, app healthy; seed lengkap (2 gereja × 60 anggota, 6 keluarga, 3 wilayah, 5 komisi, 9 ibadah, 3 bulan transaksi, akun semua peran terhubung anggota).
+- UI diperiksa di browser (desktop + 390px): dasbor pelayan menampilkan kartu Ibadah terdekat dan Tugas saya berikutnya (tanpa kartu keuangan/jemaat), halaman Bantuan dan Kebijakan Privasi tampil, tanpa error konsol.
+- Bundle: chunk utama ±419 KB (gzip ±131 KB); halaman besar terpisah per rute (members/schedule/finance ±26 KB, gzip ±7 KB). Dasbor per peran memuat kartu sesuai izin (ibadah terdekat, tugas saya, saldo kas, ulang tahun).
+- Dokumentasi: `docs/backup-restore.md`, `docs/cloudflare-tunnel.md`, `docs/panduan-server.md`; panduan admin di dalam aplikasi (`/bantuan`); draf `/kebijakan-privasi` dan `/syarat-penggunaan` tertaut di footer.
+- Catatan: domain publik sungguhan dan token Cloudflare adalah kredensial milik gereja pilot — mekanisme tunnel sudah disediakan dan terdokumentasi, pengaktifannya dilakukan saat pilot dengan domain mereka. Setup test kini membuat database `eklesia_test` otomatis bila belum ada.
 
 ---
 
@@ -168,16 +180,16 @@
 ## Masalah tertunda
 
 - **TypeScript 7** belum bisa dipakai karena `typescript-eslint` belum mendukung; pantau rilis.
-- **RLS PostgreSQL** dan **header keamanan (CSP/HSTS)** belum aktif — dijadwalkan Fase 1.
-- **Backup/restore & Cloudflare Tunnel** belum ada — Fase 5.
-- Bundle utama SPA ±322 KB (gzip ±102 KB) karena React + Router + TanStack Query. Code splitting per rute sudah aktif; audit ukuran bundle dijadwalkan Fase 5.
-- Komponen UI baru: `button`, `card`. Komponen form (input, label, select) menyusul saat dibutuhkan modul.
-- CI (GitHub Actions) belum dibuat; saat ini verifikasi dilakukan lokal.
+- Bundle utama SPA ±419 KB (gzip ±131 KB) karena React + Router + TanStack Query + Radix. Code splitting per rute sudah aktif; pertimbangkan memecah vendor saat lalu lintas nyata menuntut.
+- CI (GitHub Actions) belum dibuat; saat ini verifikasi dilakukan lokal (`typecheck`, `lint`, `test`, `build`, `test:e2e`).
+- Domain publik + token Cloudflare Tunnel milik gereja pilot belum tersedia; mekanisme dan panduan sudah siap (`docs/cloudflare-tunnel.md`).
+- Kepala keluarga belum dapat dipilih dari UI selain saat membuat keluarga; hubungan keluarga (suami/istri/anak) dan pasangan (`spouse`) belum dimodelkan penuh — kandidat Tahap 2.
 
 ## Log pekerjaan
 
 _(Terbaru di atas.)_
 
+- 2026-11-05 — **Fase 5 selesai — MVP Tahap 1 tuntas.** Dasbor per peran, ekspor seluruh data gereja (Excel 12 lembar, berizin + audit), layanan backup terjadwal dengan restore yang teruji, profile cloudflared + Uptime Kuma, hardening Compose (restart/log/batas sumber daya), panduan server/admin/privasi/syarat, seed demo lengkap, dan E2E Playwright alur kritis lulus termasuk dari volume kosong.
 - 2026-11-05 — **Fase 4 selesai.** Skema keuangan + RLS, akun kas/kategori dengan bawaan otomatis, transaksi integer rupiah tanpa hapus keras (void beralasan), form cepat persembahan Minggu (penghitung + pemeriksa), lampiran bukti tervalidasi magic bytes di volume Docker dengan rute ber-otorisasi, penutupan periode (buka hanya admin), laporan bulanan/tahunan terhitung di server dengan ekspor PDF berkop gereja dan Excel. Test hijau (API 51, shared 40), typecheck/lint/build hijau, Docker sehat, UI tanpa error konsol.
 - 2026-11-05 — **Fase 3 selesai.** Skema jadwal + RLS, peran pelayanan terikat komisi, ibadah berulang mingguan, penugasan dengan peringatan bentrok, "Jadwal Saya" (konfirmasi/tolak), tukar jadwal dua tahap (pengganti → koordinator komisinya), pengingat wa.me + email dari template yang bisa diubah, PDF jadwal bulanan dari server. Test hijau (API 43, shared 36), typecheck/lint/build hijau, Docker sehat, UI tanpa error konsol.
 - 2026-11-05 — **Fase 2 selesai.** Skema `members/families/regions/groups/group_members` + RLS, API dan UI CRUD jemaat (daftar berfilter + paginasi, detail, ulang tahun bulan ini), CRUD keluarga/wilayah/komisi + atur anggota komisi, impor Excel (template, pratinjau, deteksi duplikat lewati/perbarui, laporan error per baris) dan ekspor Excel. Test hijau (API 36, shared 29), typecheck/lint/build hijau, Docker sehat, impor 500 baris terbukti, UI desktop+mobile tanpa error konsol.
