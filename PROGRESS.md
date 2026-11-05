@@ -4,7 +4,7 @@
 > Format log: `YYYY-MM-DD — ringkasan singkat`.
 
 **Stack:** Vite + React (SPA) · Hono · PostgreSQL + Drizzle · Docker (pnpm monorepo: `apps/web`, `apps/api`, `packages/shared`)
-**Fase aktif:** Fase 2 selesai — menunggu instruksi untuk Fase 3
+**Fase aktif:** Fase 3 selesai — menunggu instruksi untuk Fase 4
 **Terakhir diperbarui:** 2026-11-05
 
 ---
@@ -85,16 +85,24 @@
 
 ## Fase 3 — Jadwal pelayanan
 
-- [ ] Skema: `service_roles`, `services`, `service_assignments`, `swap_requests`, `reminder_templates`
-- [ ] Pengaturan peran pelayanan per gereja
-- [ ] CRUD ibadah, ibadah berulang (pola mingguan), ibadah khusus
-- [ ] Penugasan pelayan per peran, peringatan bentrok
-- [ ] "Jadwal saya": konfirmasi/tolak, ajukan tukar, persetujuan koordinator
-- [ ] Notifier: `WaLinkNotifier` (tautan wa.me + template) dan `EmailNotifier`
-- [ ] Tampilan kalender bulanan dan daftar, cetak jadwal bulanan PDF (dibuat di server)
-- [ ] Test: bentrok penugasan, alur tukar jadwal, izin koordinator hanya untuk timnya
+- [x] Skema: `service_roles`, `services`, `service_assignments`, `swap_requests`, `reminder_templates`
+- [x] Pengaturan peran pelayanan per gereja
+- [x] CRUD ibadah, ibadah berulang (pola mingguan), ibadah khusus
+- [x] Penugasan pelayan per peran, peringatan bentrok
+- [x] "Jadwal saya": konfirmasi/tolak, ajukan tukar, persetujuan koordinator
+- [x] Notifier: `WaLinkNotifier` (tautan wa.me + template) dan `EmailNotifier`
+- [x] Tampilan kalender bulanan dan daftar, cetak jadwal bulanan PDF (dibuat di server)
+- [x] Test: bentrok penugasan, alur tukar jadwal, izin koordinator hanya untuk timnya
 
 **Lulus jika:** satu bulan jadwal bisa disusun, dikirim pengingat, dan dikonfirmasi pelayan.
+
+**Bukti pemenuhan (2026-11-05):**
+
+- `typecheck` bersih di 3 paket; `lint` 0 error; `test` hijau — API 43 test (termasuk 7 test jadwal: peran+ibadah berulang, peringatan bentrok + duplikat 409, jadwal saya, alur tukar penuh, koordinator komisi lain ditolak 403, pengingat wa.me + PDF, isolasi tenant), shared 36 test.
+- `pnpm build` hijau; halaman jadwal ter-code-split per rute.
+- Docker rebuild + `up -d`: migrasi `0004` jalan, `app` healthy, `/api/health` → `ok`. Smoke API produksi: buat peran, ibadah berulang 2 minggu (tanggal +7 hari benar), PDF bulanan 200 `application/pdf`, template whatsapp/email tersedia; data uji dibersihkan.
+- UI diperiksa di browser: login → `/jadwal` (kalender, tombol Tambah ibadah/Unduh PDF, tab Jadwal Saya) tanpa error konsol/halaman.
+- Keputusan: bentrok dikembalikan sebagai `warnings` (bukan penolakan) sesuai DESCRIPTION "diberi peringatan"; koordinator dibatasi lewat `service_roles.group_id` + `group_members.role_in_group = 'koordinator'`; persetujuan tukar me-reset penugasan ke status `menunggu` agar pengganti mengonfirmasi ulang; PDF memakai `@react-pdf/renderer` dengan `createElement` (tanpa JSX di API) dan paket `react` ditambah ke dependensi API.
 
 ## Fase 4 — Keuangan
 
@@ -162,6 +170,7 @@
 
 _(Terbaru di atas.)_
 
+- 2026-11-05 — **Fase 3 selesai.** Skema jadwal + RLS, peran pelayanan terikat komisi, ibadah berulang mingguan, penugasan dengan peringatan bentrok, "Jadwal Saya" (konfirmasi/tolak), tukar jadwal dua tahap (pengganti → koordinator komisinya), pengingat wa.me + email dari template yang bisa diubah, PDF jadwal bulanan dari server. Test hijau (API 43, shared 36), typecheck/lint/build hijau, Docker sehat, UI tanpa error konsol.
 - 2026-11-05 — **Fase 2 selesai.** Skema `members/families/regions/groups/group_members` + RLS, API dan UI CRUD jemaat (daftar berfilter + paginasi, detail, ulang tahun bulan ini), CRUD keluarga/wilayah/komisi + atur anggota komisi, impor Excel (template, pratinjau, deteksi duplikat lewati/perbarui, laporan error per baris) dan ekspor Excel. Test hijau (API 36, shared 29), typecheck/lint/build hijau, Docker sehat, impor 500 baris terbukti, UI desktop+mobile tanpa error konsol.
 - 2026-11-05 — **Fase 1 selesai.** Auth sesi DB + argon2 + cookie httpOnly, middleware auth/tenant/permission/CSRF+same-origin/rate-limit, RLS lapis kedua, matriks `permissions.ts`, UI login/lupa-password/undangan/pengguna/pengaturan/platform/audit-log + header keamanan. Test hijau (API 30, shared 21), typecheck/lint/build hijau, Docker dari volume kosong sehat, UI desktop+mobile tanpa error konsol.
 - 2026-11-01 — **Fase 0 selesai.** Monorepo pnpm (web/api/shared), TypeScript strict, ESLint flat + Prettier, Vitest (15 test shared, 16 test API). API Hono dengan `/api/health` ber-injeksi, error handler terpusat, logger pino ber-redaksi, penyajian SPA + fallback dengan penjagaan `/api`. Web React Router + TanStack Query + Hono RPC bertipe, layout responsif (16px, kontras tinggi), status sistem di dasbor. Drizzle + PostgreSQL 16: migrasi `churches`/`super_admins`, `db:migrate`, `db:seed` (2 gereja fiktif). Docker multi-stage non-root, read-only, `db`/`migrate`/`app` dengan healthcheck; uji dari volume kosong berhasil. README + `.env.example` + `.gitattributes` (eol=lf) + `.prettierignore`.

@@ -13,6 +13,7 @@ const AcceptInvitationPage = lazy(() => import('@/routes/accept-invitation-page'
 const DashboardPage = lazy(() => import('@/routes/dashboard-page'));
 const MembersPage = lazy(() => import('@/routes/members-page'));
 const MemberDetailPage = lazy(() => import('@/routes/member-detail-page'));
+const SchedulePage = lazy(() => import('@/routes/schedule-page'));
 const UsersPage = lazy(() => import('@/routes/users-page'));
 const ChurchSettingsPage = lazy(() => import('@/routes/church-settings-page'));
 const AuditPage = lazy(() => import('@/routes/audit-page'));
@@ -65,7 +66,7 @@ export function App() {
               path="/jadwal"
               element={
                 <ChurchUserOnly>
-                  <ModulePlaceholderPage />
+                  <SchedulePage />
                 </ChurchUserOnly>
               }
             />
