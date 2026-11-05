@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+﻿import { eq, sql } from 'drizzle-orm';
 import { createApp, type AppDependencies } from '../app.js';
 import { createDatabase, type Database } from '../db/client.js';
 import type { AppConfig } from '../lib/env.js';
@@ -29,6 +29,7 @@ const env: AppConfig = {
   SESSION_COOKIE_NAME: 'eklesia_session',
   SESSION_TTL_DAYS: 7,
   NODE_ENV: 'test',
+  ATTACHMENT_DIR: 'test-attachments',
 };
 
 export interface TestContext {
@@ -52,6 +53,7 @@ export function buildTestApp(): TestContext {
       SESSION_COOKIE_NAME: 'eklesia_session',
       SESSION_TTL_DAYS: 7,
       NODE_ENV: 'test',
+  ATTACHMENT_DIR: 'test-attachments',
       HOST: '127.0.0.1',
       PORT: 3000,
       DATABASE_URL: testAppUrl(),
@@ -127,7 +129,7 @@ export async function createTestUser(
   };
 }
 
-/** Membersihkan data uji antar test; hanya tabel Fase 1–2. */
+/** Membersihkan data uji antar test; hanya tabel Fase 1â€“2. */
 export async function clearAuthTables(ownerDb: Database): Promise<void> {
   await ownerDb.execute(
     sql`truncate table sessions, auth_tokens, users, group_members, members, families, regions, groups, audit_logs, churches cascade`,

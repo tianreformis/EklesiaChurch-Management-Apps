@@ -39,6 +39,8 @@ export const envSchema = z.object({
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   WEB_DIST_PATH: optionalString,
+  /** Folder penyimpanan lampiran bukti transaksi (volume Docker di produksi). */
+  ATTACHMENT_DIR: z.string().trim().min(1).default('data/attachments'),
 
   SESSION_COOKIE_NAME: z.string().trim().min(1).default('eklesia_session'),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
@@ -60,7 +62,7 @@ export type Env = z.infer<typeof envSchema>;
 /** Konfigurasi minimum yang dibutuhkan lapisan aplikasi (mudah diuji). */
 export type AppConfig = Pick<
   Env,
-  'APP_NAME' | 'APP_BASE_URL' | 'SESSION_COOKIE_NAME' | 'SESSION_TTL_DAYS' | 'NODE_ENV'
+  'APP_NAME' | 'APP_BASE_URL' | 'SESSION_COOKIE_NAME' | 'SESSION_TTL_DAYS' | 'NODE_ENV' | 'ATTACHMENT_DIR'
 >;
 
 export class EnvValidationError extends Error {

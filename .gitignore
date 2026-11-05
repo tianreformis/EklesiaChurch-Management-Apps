@@ -12,5 +12,7 @@ Thumbs.db
 .idea/
 backups/
 uploads/
+data/
+test-attachments/
 
 .playwright-mcp/

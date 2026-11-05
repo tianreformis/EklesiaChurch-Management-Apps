@@ -54,6 +54,9 @@ COPY --from=build --chown=node:node /app/packages/shared/package.json ./packages
 COPY --from=build --chown=node:node /app/packages/shared/dist ./packages/shared/dist
 COPY --from=build --chown=node:node /app/apps/web/dist ./apps/web/dist
 
+# Folder lampiran bukti: volume Docker dipasang di sini, dimiliki user node.
+RUN mkdir -p /data/attachments && chown -R node:node /data
+
 USER node
 WORKDIR /app/apps/api
 EXPOSE 3000

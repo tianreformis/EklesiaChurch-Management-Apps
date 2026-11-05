@@ -4,7 +4,7 @@
 > Format log: `YYYY-MM-DD — ringkasan singkat`.
 
 **Stack:** Vite + React (SPA) · Hono · PostgreSQL + Drizzle · Docker (pnpm monorepo: `apps/web`, `apps/api`, `packages/shared`)
-**Fase aktif:** Fase 3 selesai — menunggu instruksi untuk Fase 4
+**Fase aktif:** Fase 4 selesai — menunggu instruksi untuk Fase 5
 **Terakhir diperbarui:** 2026-11-05
 
 ---
@@ -106,18 +106,26 @@
 
 ## Fase 4 — Keuangan
 
-- [ ] Skema: `cash_accounts`, `finance_categories`, `transactions`, `period_locks`
-- [ ] Pengaturan akun kas dan kategori (dengan kategori default)
-- [ ] Form transaksi, daftar dengan filter, lampiran bukti (volume Docker, rute ber-otorisasi)
-- [ ] Form cepat persembahan Minggu (dihitung oleh / diverifikasi oleh)
-- [ ] Void transaksi dengan alasan (tanpa hapus keras)
-- [ ] Penutupan periode bulanan
-- [ ] Laporan bulanan dan tahunan per akun dan kategori (dihitung di server)
-- [ ] Ekspor laporan PDF (kop gereja) dan Excel
-- [ ] Halaman audit log (admin dan majelis)
-- [ ] Test: rekonsiliasi saldo, void tidak dihitung, periode terkunci menolak ubah, hanya bendahara/admin yang bisa tulis, majelis hanya baca, jemaat/pelayan ditolak
+- [x] Skema: `cash_accounts`, `finance_categories`, `transactions`, `period_locks`
+- [x] Pengaturan akun kas dan kategori (dengan kategori default)
+- [x] Form transaksi, daftar dengan filter, lampiran bukti (volume Docker, rute ber-otorisasi)
+- [x] Form cepat persembahan Minggu (dihitung oleh / diverifikasi oleh)
+- [x] Void transaksi dengan alasan (tanpa hapus keras)
+- [x] Penutupan periode bulanan
+- [x] Laporan bulanan dan tahunan per akun dan kategori (dihitung di server)
+- [x] Ekspor laporan PDF (kop gereja) dan Excel
+- [x] Halaman audit log (admin dan majelis)
+- [x] Test: rekonsiliasi saldo, void tidak dihitung, periode terkunci menolak ubah, hanya bendahara/admin yang bisa tulis, majelis hanya baca, jemaat/pelayan ditolak
 
 **Lulus jika:** laporan bulanan PDF akurat terhadap data seed dan semua test keuangan hijau.
+
+**Bukti pemenuhan (2026-11-05):**
+
+- `typecheck` bersih di 3 paket; `lint` 0 error; `test` hijau — API 51 test (termasuk 8 test keuangan: default akun/kategori, rekonsiliasi saldo awal + masuk − keluar = saldo akhir, void tidak dihitung + void ganda 409, periode terkunci menolak buat/ubah/void dan hanya admin yang membuka, izin per peran, persembahan Minggu, lampiran lintas tenant 404, isolasi tenant), shared 40 test.
+- `pnpm build` hijau; halaman keuangan ter-code-split per rute.
+- Docker rebuild + `up -d`: migrasi `0005` jalan, volume `attachments-data` terpasang di `/data/attachments` (dimiliki user `node` di image), `app` healthy. Smoke produksi sebagai bendahara demo: akun/kategori bawaan otomatis (Kas Utama + 14 kategori), transaksi → laporan (saldo akhir benar) → PDF/Excel 200 → void; unggah lampiran PNG dan sajian ulang 200 `image/png`.
+- UI diperiksa di browser: login bendahara → `/keuangan` (saldo kas, tab Laporan & Periode) tanpa error konsol/halaman.
+- Keputusan: tidak ada rute hapus transaksi sama sekali (hanya void); lampiran divalidasi dari magic bytes (JPG/PNG/PDF, maks 2 MB), disimpan bernama acak di volume, dan hanya disajikan bila ada transaksi gereja pemanggil yang merujuk nama berkasnya; ekspor laporan memakai izin `finance.report` (bendahara/admin), sedangkan laporan JSON dapat dibaca majelis lewat `finance.read`; saldo awal dapat dikoreksi admin/bendahara dan tercatat di audit log.
 
 ## Fase 5 — Dashboard, hardening, dan deploy produksi di komputer pribadi
 
@@ -170,6 +178,7 @@
 
 _(Terbaru di atas.)_
 
+- 2026-11-05 — **Fase 4 selesai.** Skema keuangan + RLS, akun kas/kategori dengan bawaan otomatis, transaksi integer rupiah tanpa hapus keras (void beralasan), form cepat persembahan Minggu (penghitung + pemeriksa), lampiran bukti tervalidasi magic bytes di volume Docker dengan rute ber-otorisasi, penutupan periode (buka hanya admin), laporan bulanan/tahunan terhitung di server dengan ekspor PDF berkop gereja dan Excel. Test hijau (API 51, shared 40), typecheck/lint/build hijau, Docker sehat, UI tanpa error konsol.
 - 2026-11-05 — **Fase 3 selesai.** Skema jadwal + RLS, peran pelayanan terikat komisi, ibadah berulang mingguan, penugasan dengan peringatan bentrok, "Jadwal Saya" (konfirmasi/tolak), tukar jadwal dua tahap (pengganti → koordinator komisinya), pengingat wa.me + email dari template yang bisa diubah, PDF jadwal bulanan dari server. Test hijau (API 43, shared 36), typecheck/lint/build hijau, Docker sehat, UI tanpa error konsol.
 - 2026-11-05 — **Fase 2 selesai.** Skema `members/families/regions/groups/group_members` + RLS, API dan UI CRUD jemaat (daftar berfilter + paginasi, detail, ulang tahun bulan ini), CRUD keluarga/wilayah/komisi + atur anggota komisi, impor Excel (template, pratinjau, deteksi duplikat lewati/perbarui, laporan error per baris) dan ekspor Excel. Test hijau (API 36, shared 29), typecheck/lint/build hijau, Docker sehat, impor 500 baris terbukti, UI desktop+mobile tanpa error konsol.
 - 2026-11-05 — **Fase 1 selesai.** Auth sesi DB + argon2 + cookie httpOnly, middleware auth/tenant/permission/CSRF+same-origin/rate-limit, RLS lapis kedua, matriks `permissions.ts`, UI login/lupa-password/undangan/pengguna/pengaturan/platform/audit-log + header keamanan. Test hijau (API 30, shared 21), typecheck/lint/build hijau, Docker dari volume kosong sehat, UI desktop+mobile tanpa error konsol.

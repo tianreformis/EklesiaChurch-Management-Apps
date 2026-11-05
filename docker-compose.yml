@@ -59,6 +59,7 @@ services:
       SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       WEB_DIST_PATH: /app/apps/web/dist
+      ATTACHMENT_DIR: /data/attachments
       TZ: Asia/Jakarta
     ports:
       # Hanya localhost. Akses publik lewat Cloudflare Tunnel (fase deployment).
@@ -66,6 +67,9 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    volumes:
+      # Lampiran bukti transaksi disimpan di volume, bukan di dalam image.
+      - attachments-data:/data/attachments
     stop_grace_period: 15s
     depends_on:
       db:
@@ -87,3 +91,4 @@ services:
 
 volumes:
   db-data:
+  attachments-data:

@@ -14,11 +14,11 @@ const DashboardPage = lazy(() => import('@/routes/dashboard-page'));
 const MembersPage = lazy(() => import('@/routes/members-page'));
 const MemberDetailPage = lazy(() => import('@/routes/member-detail-page'));
 const SchedulePage = lazy(() => import('@/routes/schedule-page'));
+const FinancePage = lazy(() => import('@/routes/finance-page'));
 const UsersPage = lazy(() => import('@/routes/users-page'));
 const ChurchSettingsPage = lazy(() => import('@/routes/church-settings-page'));
 const AuditPage = lazy(() => import('@/routes/audit-page'));
 const PlatformPage = lazy(() => import('@/routes/platform-page'));
-const ModulePlaceholderPage = lazy(() => import('@/routes/module-placeholder-page'));
 const NotFoundPage = lazy(() => import('@/routes/not-found-page'));
 
 function HomeRedirect() {
@@ -74,7 +74,7 @@ export function App() {
               path="/keuangan"
               element={
                 <ChurchUserOnly>
-                  <ModulePlaceholderPage />
+                  <FinancePage />
                 </ChurchUserOnly>
               }
             />

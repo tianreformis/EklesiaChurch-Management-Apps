@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+﻿import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -20,6 +20,7 @@ const env: AppConfig = {
   SESSION_COOKIE_NAME: 'eklesia_session',
   SESSION_TTL_DAYS: 7,
   NODE_ENV: 'test',
+  ATTACHMENT_DIR: 'test-attachments',
 };
 
 const mailer: Mailer = {
