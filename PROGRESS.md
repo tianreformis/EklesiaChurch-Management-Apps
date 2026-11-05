@@ -4,8 +4,8 @@
 > Format log: `YYYY-MM-DD — ringkasan singkat`.
 
 **Stack:** Vite + React (SPA) · Hono · PostgreSQL + Drizzle · Docker (pnpm monorepo: `apps/web`, `apps/api`, `packages/shared`)
-**Fase aktif:** Fase 0 selesai — menunggu instruksi untuk Fase 1
-**Terakhir diperbarui:** 2026-11-01
+**Fase aktif:** Fase 1 selesai — menunggu instruksi untuk Fase 2
+**Terakhir diperbarui:** 2026-11-05
 
 ---
 
@@ -38,18 +38,29 @@
 
 ## Fase 1 — Auth, tenant, dan hak akses
 
-- [ ] Skema: `churches`, `users`, `sessions`, `audit_logs`
-- [ ] Auth: login/logout, sesi DB (token acak, hash tersimpan), cookie httpOnly/secure/lax, argon2
-- [ ] Middleware: `auth`, `tenant` (`getTenantDb`), `permission` (dari `permissions.ts`), `csrf`, rate limit
-- [ ] Postgres RLS sebagai lapisan kedua untuk tabel milik gereja
-- [ ] `permissions.ts` di `packages/shared` (matriks peran → izin), dipakai server dan UI
-- [ ] Halaman masuk, lupa/atur ulang password, undangan pengguna via email
-- [ ] Halaman `/platform` untuk `super_admin`: buat gereja + admin pertama
-- [ ] Halaman `/pengaturan`: profil gereja, kelola pengguna dan peran
-- [ ] Header keamanan (CSP, dll.)
-- [ ] Test: isolasi tenant untuk tiap rute (A tidak bisa akses B, termasuk lewat ID), test izin per peran, test sesi dan CSRF
+- [x] Skema: `churches`, `users`, `sessions`, `audit_logs`
+- [x] Auth: login/logout, sesi DB (token acak, hash tersimpan), cookie httpOnly/secure/lax, argon2
+- [x] Middleware: `auth`, `tenant` (`getTenantDb`), `permission` (dari `permissions.ts`), `csrf` + `same-origin`, rate limit
+- [x] Postgres RLS sebagai lapisan kedua untuk tabel milik gereja
+- [x] `permissions.ts` di `packages/shared` (matriks peran → izin), dipakai server dan UI
+- [x] Halaman masuk, lupa/atur ulang password, undangan pengguna via email
+- [x] Halaman `/platform` untuk `super_admin`: buat gereja + admin pertama
+- [x] Halaman `/pengaturan`: profil gereja, kelola pengguna dan peran
+- [x] Header keamanan (CSP, dll.)
+- [x] Test: isolasi tenant untuk tiap rute (A tidak bisa akses B, termasuk lewat ID), test izin per peran, test sesi dan CSRF
 
 **Lulus jika:** semua test isolasi, izin, dan sesi hijau.
+
+**Bukti pemenuhan (2026-11-05):**
+
+- `typecheck` bersih di 3 paket; `lint` 0 error (10 warning non-kritis: `no-console` di skrip debug, react-compiler `watch`); `test` hijau — API 30 test (4 file: unit + integrasi auth/tenant/izin/RLS + CSRF), shared 21 test.
+- `pnpm build` hijau, code splitting per rute aktif.
+- `docker compose build` + `down`/`up -d` dari volume kosong: `migrate` exit 0, `app` healthy, `/api/health` → `ok`.
+- Smoke API lewat container produksi: admin login → `/users` 7 akun gereja sendiri; `/church` slug benar; bendahara → `/users` 403; super_admin → `/platform/summary` 2 gereja/8 pengguna; `/church` untuk platform ditolak.
+- UI diperiksa di browser: login → dashboard peran; `/pengguna` (7 akun + undang/ubah); `/pengaturan` (profil + zona waktu); `/jejak-audit`; `/platform` (ringkasan + daftar gereja); halaman 404; mobile 390px; tanpa error konsol.
+- Perbaikan penting: `hono/csrf` bawaan tidak memeriksa JSON → ditambah middleware `same-origin`; `@hono/zod-validator` dipindah ke runtime deps (image prod crash tanpa itu); `MIGRATION_DATABASE_URL` di Compose memakai host internal `db` (nilai host `127.0.0.1` tidak resolvable di jaringan Docker → login 401 karena fallback ke peran RLS).
+- Akun demo (password `Eklesia2026`): `admin@gki-contoh.test`, `bendahara@gki-contoh.test`, `majelis@gki-contoh.test`, `admin@gpdi-contoh.test`, `platform@eklesia.test`.
+- Commit: `fix(security)` same-origin + typecheck web, `fix(deploy)` wiring DB container.
 
 ## Fase 2 — Data jemaat
 
@@ -125,6 +136,7 @@
 - **Kontainer app** berjalan `read_only: true` + `tmpfs /tmp`, user `node` (uid 1000), tanpa kode sumber, tanpa `.env`.
 - **Tailwind CSS v4** lewat `@tailwindcss/vite` (tanpa `tailwind.config`), komponen UI ditulis dengan pola shadcn/ui (`components.json` disertakan untuk CLI ke depan). React 19, Vite 8, React Router 7.
 - Layanan `backup` dan `cloudflared` sengaja **belum** ada di Compose karena termasuk checklist Fase 5; Fondasi hanya menyiapkan `db`, `migrate`, `app`.
+- Runtime container memakai dua koneksi DB: `DATABASE_URL` peran terbatas `eklesia_app` (RLS aktif) untuk rute gereja, `MIGRATION_DATABASE_URL` pemilik skema (host internal `db:5432`) untuk auth/email-unik/platform. Jangan memakai URL host `127.0.0.1` di Compose — tidak resolvable dari dalam jaringan Docker.
 - `.prettierignore` mengecualikan `AGENTS.md`, `DESCRIPTION.md`, `PROMPT.md`, `PROGRESS.md` agar dokumen panduan tidak diformat ulang otomatis.
 - `pnpm dev` lebih dulu membangun `packages/shared` sekali, lalu menjalankan watch shared + API + web paralel.
 
@@ -141,4 +153,5 @@
 
 _(Terbaru di atas.)_
 
+- 2026-11-05 — **Fase 1 selesai.** Auth sesi DB + argon2 + cookie httpOnly, middleware auth/tenant/permission/CSRF+same-origin/rate-limit, RLS lapis kedua, matriks `permissions.ts`, UI login/lupa-password/undangan/pengguna/pengaturan/platform/audit-log + header keamanan. Test hijau (API 30, shared 21), typecheck/lint/build hijau, Docker dari volume kosong sehat, UI desktop+mobile tanpa error konsol.
 - 2026-11-01 — **Fase 0 selesai.** Monorepo pnpm (web/api/shared), TypeScript strict, ESLint flat + Prettier, Vitest (15 test shared, 16 test API). API Hono dengan `/api/health` ber-injeksi, error handler terpusat, logger pino ber-redaksi, penyajian SPA + fallback dengan penjagaan `/api`. Web React Router + TanStack Query + Hono RPC bertipe, layout responsif (16px, kontras tinggi), status sistem di dasbor. Drizzle + PostgreSQL 16: migrasi `churches`/`super_admins`, `db:migrate`, `db:seed` (2 gereja fiktif). Docker multi-stage non-root, read-only, `db`/`migrate`/`app` dengan healthcheck; uji dari volume kosong berhasil. README + `.env.example` + `.gitattributes` (eol=lf) + `.prettierignore`.
